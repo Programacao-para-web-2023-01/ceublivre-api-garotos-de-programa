@@ -14,18 +14,20 @@ class Product(BaseModel):
     category: str
     price: float
     image: str
+    version: int
+    active: int
 
 
-@app.post('/creat_product')
+@app.post('/create_product')
 async def post_prosuct(product: Product):
     cursor = connection.cursor(dictionary=True)
 
-    stantment = 'insert into `products` (`product_name`, `product_description`,`product_category`,`product_price`, product_image)' \
-                'values (%s, %s, %s, %s, %s)'
+    statement = 'insert into `products` (`product_name`, `product_description`,`product_category`,`product_price`, `product_image`, `product_version`, `product_active`)' \
+                'values (%s, %s, %s, %s, %s, %s, %s)'
 
-    values = (product.name, product.description, product.category, product.price, product.image)
+    values = (product.name, product.description, product.category, product.price, product.image, 1, 1)
 
-    cursor.execute(stantment, values)
+    cursor.execute(statement, values)
 
     product.id = cursor.lastrowid
 

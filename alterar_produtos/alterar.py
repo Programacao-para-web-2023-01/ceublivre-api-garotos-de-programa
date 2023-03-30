@@ -13,7 +13,7 @@ class Product(BaseModel):
     price: float
     image: str
     version: int
-    active: bool
+    active: int
 
 @app.put("/product/{id}")
 async def update_product(id: int, product: Product):
