@@ -12,14 +12,16 @@ class Product(BaseModel):
     category: str
     price: float
     image: str
+    version: int
+    active: bool
 
 @app.put("/product/{id}")
 async def update_product(id: int, product: Product):
     cursor = connection.cursor(dictionary=True)
-    statement = "UPDATE `products` SET product_name = %s, product_description = %s, product_category = %s, product_price = %s , product_image = %s"\
+    statement = "UPDATE `products` SET product_name = %s, product_description = %s, product_category = %s, product_price = %s , product_image = %s, product_version = %s, product_active = %s"\
                     "WHERE product_id = %s"
 
-    value = (product.name, product.description, product.category, product.price, product.image, product.id)
+    value = (product.name, product.description, product.category, product.price, product.image, product.version, product.active, product.id)
 
     cursor.execute(statement, value)
     connection.commit()
