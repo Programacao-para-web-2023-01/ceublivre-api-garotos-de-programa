@@ -1,31 +1,27 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import mysql.connector
+from deta import Deta
 
-connection = mysql.connector.connect(user="user", database="product_List", password="123456")
+deta = Deta("e0h2cutqoow_Qgi1mF4jpgxHGhDsS3mNj8MWttvPwiUa")
 
 app = FastAPI()
 
+db = deta.Base("Products")
+
 class Product(BaseModel):
-    id: int | None
+    key: str | None
     name: str
     description: str
     category: str
     price: float
+    image: str
+    version: int
+    active: int
 
-@app.post('/creat_product')
-async def post_prosuct(product: Product):
-    cursor = connection.cursor(dictionary=True)
+@app.post('/product')
+async def post_product(product: Product):
     
-    stantment = 'insert into `products` (`product_name`, `product_description`,`product_category`,`product_price`)'\
-    'values (%s, %s, %s, %s)'
+    inserted = db.insert(product.dict(exclude={'key'}))
 
-    values = (product.name, product.description, product.category, product.price)
-
-    cursor.execute(stantment, values)
-
-    product.id = cursor.lastrowid
-
-    connection.commit()
-
-    return product
+    
+    return inserted

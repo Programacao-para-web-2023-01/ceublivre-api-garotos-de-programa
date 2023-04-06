@@ -1,29 +1,29 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import mysql.connector
+from deta import Deta
 
-connection = mysql.connector.connect(user="root", database="product_List", password = "123456")
+deta = Deta("e0h2cutqoow_Qgi1mF4jpgxHGhDsS3mNj8MWttvPwiUa")
+
 app = FastAPI()
 
+db = deta.Base("Products")
+
 class Product(BaseModel):
-    id: int | None
+    key: str | None
     name: str
     description: str
     category: str
     price: float
+    image: str
+    version: int
+    active: int
 
-@app.put("/product/{id}")
-async def update_product(id: int, product: Product):
-    cursor = connection.cursor(dictionary=True)
-    statement = "UPDATE `products` SET product_name = %s, product_description = %s, product_category = %s, product_price = %s "\
-                    "WHERE product_id = %s"
+@app.put("/product/{key}")
+async def update_product(product: Product, key: str):
+    
+    updated = db.update(product.dict(exclude={'key'}), key)
 
-    value = (product.name, product.description, product.category, product.price, product.id)
-
-    cursor.execute(statement, value)
-    connection.commit()
-
-    if cursor.rowcount == 0:
+    if updated != None:
         raise HTTPException(status_code=404, detail="Product not found")
 
     return product

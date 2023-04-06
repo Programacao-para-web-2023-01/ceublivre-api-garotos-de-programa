@@ -1,13 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import mysql.connector
+from deta import Deta
 
-connection = mysql.connector.connect(user='root', database='product_List', password='123456')
+deta = Deta("e0h2cutqoow_Qgi1mF4jpgxHGhDsS3mNj8MWttvPwiUa")
+
 app = FastAPI()
 
+db = deta.Base("Products")
+
 class Product(BaseModel):
-    id_tabela: int | None
-    id_produto: int
+    key: str | None
     name: str
     description: str
     category: str
@@ -16,13 +18,15 @@ class Product(BaseModel):
     version: int
     active: int
 
+@app.get("/product")
+async def list_products():
+    res = db.fetch()
+    all_items = res.items
 
-@app.get("/list_products")
-async def list_products(product: Product):
-    cursor = connection.cursor(dictionary=True)
-    statment = 'select * from `products`'
-    
-    cursor.execute(statment)
+# fetch until last is 'None'
+    while res.last:
+        res = db.fetch(last=res.last)
+        all_items += res.items
 
-    return cursor.fetchall()
+    return res.items
 
