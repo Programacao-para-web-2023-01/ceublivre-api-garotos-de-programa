@@ -33,9 +33,17 @@ async def outdated_products(product: Product):
 
 async def constrol_update_product(product: Product, key: str):
     update = db.update(product.dict(exclude={'key'}), key)
-    
+
     if  update != None:
         raise HTTPException(status_code=404, detail="Product not found")
-    
+
     outdated_products(product)
     return product
+
+
+@app.post('/product_variation')
+
+async def product_variation(product: Product):
+    create = db.insert(product.dict(exclude={'key'}))
+
+    return create
