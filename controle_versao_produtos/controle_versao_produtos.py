@@ -12,12 +12,14 @@ db_prod_outdated = deta.base('OutdatedProducts')
 
 class Product(BaseModel):
     key: str | None
+    first_vesion_key: str
     name: str
     description: str
     price: float
     image: str
     version: int
     active: int
+    weight: float
 
 #pensar em onde adicionar as versoes anteriores do produto
 @app.post('/outdated_products')
