@@ -6,7 +6,7 @@ deta = Deta("e0h2cutqoow_Qgi1mF4jpgxHGhDsS3mNj8MWttvPwiUa")
 
 app = FastAPI()
 
-db = deta.Base("Products")
+db = deta.Base("Products")#Base de produtos(ativos)
 
 class Product(BaseModel):
     key: str | None
