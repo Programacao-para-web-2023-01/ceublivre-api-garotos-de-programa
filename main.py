@@ -8,6 +8,7 @@ app = FastAPI()
 
 deta = Deta("e0h2cutqoow_Qgi1mF4jpgxHGhDsS3mNj8MWttvPwiUa")
 db = deta.Base("Products") #Base de produtos(ativos)
+db_prod_outdated = deta.Base("ProductDatabase") #Base de produtos(versões anteriores)
 drive = deta.Drive("Images") # Drive de Imagens (ativos)
 
 class Product(BaseModel):
