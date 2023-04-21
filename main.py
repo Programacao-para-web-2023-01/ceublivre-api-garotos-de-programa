@@ -8,8 +8,15 @@ app = FastAPI()
 
 deta = Deta("e0h2cutqoow_Qgi1mF4jpgxHGhDsS3mNj8MWttvPwiUa")
 db = deta.Base("Products") #Base de produtos(ativos)
-db_prod_outdated = deta.Base("ProductDatabase") #Base de produtos(versões anteriores)
 drive = deta.Drive("Images") # Drive de Imagens (ativos)
+
+class BaseProduct(BaseModel):
+    name: str
+    description: str
+    category: str
+    price: float
+    image: str
+    weight: float
 
 class Product(BaseModel):
     key: str | None
@@ -55,9 +62,15 @@ async def get_products_by_id(key: str):
 
 ### Novo produto
 @app.post('/product')
-async def post_product(product: Product):
+async def post_product(baseproduct: BaseProduct):
     
-    inserted = db.insert(product.dict(exclude={'key'}))
+    product: Product
+    product = baseproduct
+    product.active = 1
+    product.version = 1
+
+    inserted = db.insert(product.dict)
+    
     return inserted
 
 ### Inserção de Imagens
@@ -78,6 +91,9 @@ async def insert_image(file: Union[UploadFile, None] = None):
 @app.put("/product/{key}")
 async def update_product(product: Product, key: str):
     
+    if product.key != key:
+        raise HTTPException(status_code=404, detail="Body ID does not match PATH ID")
+
     updated = db.update(product.dict(exclude={'key'}), key)
     if updated != None:
         raise HTTPException(status_code=404, detail="Product not found")
