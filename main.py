@@ -12,6 +12,7 @@ drive = deta.Drive("Images") # Drive de Imagens (ativos)
 
 class Product(BaseModel):
     key: str | None
+    first_key: str| None
     name: str
     description: str
     category: str
@@ -19,6 +20,7 @@ class Product(BaseModel):
     image: str
     version: int
     active: int
+    weight: float
 
 ### Todos produtos cadastrados        
 @app.get("/product")

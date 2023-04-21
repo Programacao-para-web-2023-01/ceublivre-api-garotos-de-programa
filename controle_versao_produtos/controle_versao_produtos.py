@@ -12,7 +12,7 @@ db_prod_outdated = deta.base('OutdatedProducts')
 
 class Product(BaseModel):
     key: str | None
-    first_vesion_key: str
+    first_key: str
     name: str
     description: str
     price: float
