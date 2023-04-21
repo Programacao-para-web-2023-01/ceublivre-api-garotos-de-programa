@@ -64,6 +64,13 @@ async def post_product(product: Product):
 @app.put('/product')
 async def insert_image(file: Union[UploadFile, None] = None):
     if not file:
+      return {"message": "No upload file sent"}
+    else:
+        f = drive.put(file.filename, file.file)
+        if f != file.filename:
+            return {"message": "upload failed"}
+        else:
+            return {"filename": file.filename}
 
 
 ### Alterar produto 
