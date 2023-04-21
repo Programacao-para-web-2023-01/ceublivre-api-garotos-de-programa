@@ -4,11 +4,11 @@ from deta import Deta
 
 deta = Deta("e0h2cutqoow_Qgi1mF4jpgxHGhDsS3mNj8MWttvPwiUa")
 
-app = FastAPI
+app = FastAPI()
 
-db = deta.base('ProductDatabase')
+db = deta.Base('Product')
 
-db_prod_outdated = deta.base('OutdatedProducts')
+db_prod_outdated = deta.Base('ProductDatabase')
 
 class Product(BaseModel):
     key: str | None
@@ -22,15 +22,13 @@ class Product(BaseModel):
     weight: float
 
 #pensar em onde adicionar as versoes anteriores do produto
-@app.post('/outdated_products')
-
+@app.post('/outdated_Products')
 async def outdated_products(product: Product):
     create = db_prod_outdated.insert(product.dict(exclude={'key'}))
 
     return create
 
 @app.put('/update_product/{key}')
-
 async def constrol_update_product(product: Product, key: str):
     update = db.update(product.dict(exclude={'key'}), key)
     
