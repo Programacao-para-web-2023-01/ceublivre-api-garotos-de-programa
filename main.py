@@ -9,6 +9,7 @@ app = FastAPI()
 deta = Deta("e0h2cutqoow_Qgi1mF4jpgxHGhDsS3mNj8MWttvPwiUa")
 db = deta.Base("Products") #Base de produtos(ativos)
 drive = deta.Drive("Images") # Drive de Imagens (ativos)
+dbInactive = deta.Base("ProductDatabase")# Base de produtos(Inativos)
 
 class BaseProduct(BaseModel):
     name: str
@@ -55,7 +56,7 @@ async def get_active_products():
 ### Produto por key
 @app.get("/product/{key}")
 async def get_products_by_id(key: str):
-    product = db.get(id)
+    product = db.get(key)
     if product:
         return product
     raise HTTPException(status_code=404, detail="product not found")
@@ -69,12 +70,15 @@ async def post_product(baseproduct: BaseProduct):
     product.active = 1
     product.version = 1
 
-    inserted = db.insert(product.dict)
+    inserted = db.put(product.dict)
+    product.key = inserted.key
+    product.first_key = inserted.key
+    inserted = db.update(product.dict, product.key)
     
     return inserted
 
 ### Inserção de Imagens
-### Ainda necessário integrar o JSON do registro de produto
+### ****Ainda necessário integrar o JSON do registro de produto****
 @app.put('/product')
 async def insert_image(file: Union[UploadFile, None] = None):
     if not file:
@@ -92,9 +96,38 @@ async def insert_image(file: Union[UploadFile, None] = None):
 async def update_product(product: Product, key: str):
     
     if product.key != key:
-        raise HTTPException(status_code=404, detail="Body ID does not match PATH ID")
+        raise HTTPException(status_code=400, detail="Body ID does not match PATH ID")
 
     updated = db.update(product.dict(exclude={'key'}), key)
     if updated != None:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
+
+### Desabilitar produto
+@app.patch("/product/disable/{key}")
+async def disable_product(key: str):
+    
+    product = db.get(key)
+    if product == None:
+        raise HTTPException(status_code=404, detail="Product not found in the active products list")
+    dbInactive.put(product)
+    disabled = dbInactive.update({"active":0}, key)
+    db.delete(key)
+
+    if disabled == None:
+        return "Product disabled"
+
+
+### Habilitar produto
+@app.patch("/product/enable/{key}")
+async def enable_product(key: str):
+    
+    product = dbInactive.get(key)
+    if product == None:
+        raise HTTPException(status_code=404, detail="Product not found in the inactive products list")
+    db.put(product)
+    enabled = db.update({"active":1}, key)
+    dbInactive.delete(key)
+
+    if enabled == None:
+        return "Product enabled"
