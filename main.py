@@ -31,7 +31,7 @@ class Product(BaseModel):
     active: int
     weight: float
 
-### Todos produtos cadastrados        
+### Todos produtos cadastrados, busca no banco de produtos ativos e não-ativos
 @app.get("/product")
 async def list_products():
     res = db.fetch()
@@ -40,7 +40,14 @@ async def list_products():
     while res.last:
         res = db.fetch(last=res.last)
         all_items += res.items
-    return res.items
+
+    res = dbInactive.fetch()
+    all_items += res.items
+# fetch until last is 'None'
+    while res.last:
+        res = db.fetch(last=res.last)
+        all_items += res.items
+    return all_items
 
 ### Produtos ativos
 @app.get("/product/active")
@@ -110,7 +117,7 @@ async def disable_product(key: str):
     product = db.get(key)
     if product == None:
         raise HTTPException(status_code=404, detail="Product not found in the active products list")
-    dbInactive.put(product)
+    dbInactive.put(product,expire_in=10368000) ## Expira em 120 dias
     disabled = dbInactive.update({"active":0}, key)
     db.delete(key)
 
@@ -126,8 +133,16 @@ async def enable_product(key: str):
     if product == None:
         raise HTTPException(status_code=404, detail="Product not found in the inactive products list")
     db.put(product)
-    enabled = db.update({"active":1}, key)
+    
+    enabled = db.update({"active":1}, key, expire_in= 600)
+    #db.update({"__expires":None},key)
     dbInactive.delete(key)
 
     if enabled == None:
         return "Product enabled"
+
+### Deleta produto do banco de inativos
+@app.delete("/product/{key}")
+async def delete_product(key:str):
+    dbInactive.delete(key)
+    return "Product deleted"
