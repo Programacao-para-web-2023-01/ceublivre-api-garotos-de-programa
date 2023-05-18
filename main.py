@@ -134,8 +134,7 @@ async def enable_product(key: str):
         raise HTTPException(status_code=404, detail="Product not found in the inactive products list")
     db.put(product)
     
-    enabled = db.update({"active":1}, key, expire_in= 600)
-    #db.update({"__expires":None},key)
+    enabled = db.update({"active":1, "__expires": db.util.trim()}, key)
     dbInactive.delete(key)
 
     if enabled == None:
