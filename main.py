@@ -1,9 +1,7 @@
-from typing import Annotated, Union
-from fastapi import FastAPI, HTTPException, File, UploadFile
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from deta import Deta
-import uuid
 
 
 app = FastAPI()
@@ -36,8 +34,8 @@ class BaseProduct(BaseModel):
     weight: float
 
 class Product(BaseModel):
-    key: str | None
-    first_key: str| None
+    key: str 
+    first_key: str
     name: str
     description: str
     category: str
@@ -48,7 +46,7 @@ class Product(BaseModel):
     weight: float
 
 class Category(BaseModel):
-    key:str| None
+    key:str
     name: str
 
 ### Todos produtos cadastrados, busca no banco de produtos ativos e não-ativos
@@ -105,19 +103,22 @@ async def post_product(baseproduct: BaseProduct):
     return inserted
 
 ### Inserção de Imagens
-@app.put('/product/image/{prod_key}')
-async def insert_image(prod_key: str, file: Union[UploadFile, None] = None):
+@app.patch('/product/image/{prod_key}')
+async def insert_image(prod_key: str, file: UploadFile):
     if not file:
-      return {"message": "No upload file sent"}
+      raise HTTPException(status_code=400, detail="File not sent")
     else:
-        filename = str(uuid.uuid4()) + ".jpg"
-        f = drive.put(filename, file.file)
-        if f != filename:
-            return {"message": "upload failed"}
-        else:
-            db.update({"image": filename}, prod_key)
-            return {"filename": filename, "product_key":prod_key}
-    
+        if (file.content_type == 'image/jpg') | (file.content_type == 'image/jpeg') | (file.content_type == 'image/jpg'):
+            filename = file.filename
+            f = drive.put(filename, file.file)
+            if f != filename:
+                return {"message": "upload failed"}
+            else:
+                db.update({"image": filename}, prod_key)
+                return {"filename": filename, "product_key":prod_key}
+        else: 
+            raise HTTPException(status_code=400, detail="Only files in jpg, jpeg or png format are accepted")
+
 
 
 ### Alterar produto 
