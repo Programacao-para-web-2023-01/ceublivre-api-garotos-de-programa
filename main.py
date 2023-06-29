@@ -90,18 +90,8 @@ async def get_products_by_id(key: str):
 
 ### Novo produto
 @app.post('/product')
-async def post_product(baseproduct: BaseProduct):
-    
-    product: Product
-    product = baseproduct
-    product.active = 1
-    product.version = 1
-
-    inserted = db.put(product.dict)
-    product.key = inserted.key
-    product.first_key = inserted.key
-    inserted = db.update(product.dict, product.key)
-    
+async def post_product(product: Product):
+    inserted = db.put(product.dict(exclude={"key","first_key"}))
     return inserted
 
 ### Inserção de Imagens
@@ -139,7 +129,7 @@ async def update_product(product: Product, key: str):
     if product.key != key:
         raise HTTPException(status_code=400, detail="Body ID does not match PATH ID")
 
-    updated = db.update(product.dict(exclude={'key'}), key)
+    updated = db.update(product.dict(exclude={'key', 'first_key'}), key)
     if updated != None:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
@@ -174,10 +164,10 @@ async def enable_product(key: str):
     if enabled == None:
         return "Product enabled"
 
-### Deleta produto do banco de inativos
+### Deleta produto do banco
 @app.delete("/product/{key}")
 async def delete_product(key:str):
-    dbInactive.delete(key)
+    db.delete(key)
     return "Product deleted"
 
 # Create category
