@@ -123,8 +123,8 @@ async def insert_image(prod_key: str, file: UploadFile):
 
 ### Consulta de Imagens
 @app.get('/product/image/{prod_key}')
-async def get_image(key: str):
-    product = db.get(key)
+async def get_image(prod_key: str):
+    product = db.get(prod_key)
     if product:
         response = drive.get(product['image'])
         image = response.read()
