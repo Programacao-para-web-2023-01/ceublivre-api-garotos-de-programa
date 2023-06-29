@@ -1,7 +1,9 @@
 from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from deta import Deta
+
 
 
 app = FastAPI()
@@ -108,7 +110,7 @@ async def insert_image(prod_key: str, file: UploadFile):
     if not file:
       raise HTTPException(status_code=400, detail="File not sent")
     else:
-        if (file.content_type == 'image/jpg') | (file.content_type == 'image/jpeg') | (file.content_type == 'image/jpg'):
+        if (file.content_type == 'image/jpg') | (file.content_type == 'image/jpeg'):
             filename = file.filename
             f = drive.put(filename, file.file)
             if f != filename:
@@ -117,8 +119,17 @@ async def insert_image(prod_key: str, file: UploadFile):
                 db.update({"image": filename}, prod_key)
                 return {"filename": filename, "product_key":prod_key}
         else: 
-            raise HTTPException(status_code=400, detail="Only files in jpg, jpeg or png format are accepted")
+            raise HTTPException(status_code=400, detail="Only files in jpg or jpeg format are accepted")
 
+### Consulta de Imagens
+@app.get('/product/image/{prod_key}')
+async def get_image(key: str):
+    product = db.get(key)
+    if product:
+        response = drive.get(product['image'])
+        image = response.read()
+        return Response(content=image, media_type='image/jpeg')
+    raise HTTPException(status_code=404, detail="product not found")
 
 
 ### Alterar produto 
